@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "./library/FixedPoint.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
@@ -13,7 +13,6 @@ contract CommunitySale {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
 
-    uint32 public projectId;
     mapping(address => uint256) public userToTokenAmount;
     mapping(address => uint8) public whiteListedUser;
     uint256 public totalTokenSupply;
@@ -25,6 +24,7 @@ contract CommunitySale {
     uint32 public endTimestamp;
     uint256 public maxTokenPerUser;
     bool public contractStatus;
+    string ipfsId;
 
     IERC20 private projectToken;
     IERC20 private principalToken;
@@ -39,10 +39,8 @@ contract CommunitySale {
     }
 
     constructor (
-        uint32 projectId_,
         address tokenAdd_,
         address principal_,
-        address admin_,
         uint256 price_,
         uint256 totalTokenSupply_,
         address stakedTokenAddress_,
@@ -51,17 +49,21 @@ contract CommunitySale {
         uint32 endTime_)
     {
         _owner = msg.sender;
-        require(projectId > 0);
-        projectId = projectId;
         projectToken = IERC20(tokenAdd_);
         principalToken = IERC20(principal_);
-        _admin = admin_;
         price = price_;
         totalTokenSupply = totalTokenSupply_;
         stakedTokenAddress = stakedTokenAddress_;
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+    }
+
+    function initialize(address owner, address admin) external {
+        require(owner == msg.sender);
+        require(admin == msg.sender);
+        _owner = owner;
+        _admin = admin;
     }
 
     receive() external payable{
@@ -145,8 +147,7 @@ contract CommunitySale {
         projectToken.safeTransfer(to_, value);
     }
 
-
-    function payoutFor(uint256 amount) internal returns(uint256){
+    function payoutFor(uint256 amount) internal view returns(uint256){
         return FixedPoint.fraction(amount, price).decode112with18();
     }
 }

@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "./library/FixedPoint.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
@@ -23,6 +23,7 @@ contract PrivateSale {
     uint32 public startTimestamp;
     uint32 public endTimestamp;
     bool public contractStatus;
+    string ipfsId;
 
     address private _admin;
     address private _owner;
@@ -37,28 +38,29 @@ contract PrivateSale {
     }
 
     constructor (
-        uint32 projectId_,
         address tokenAdd_,
         address principal_,
-        address admin_,
         uint256 price_,
         uint256 totalTokenSupply_,
         address nftAddress_,
-        uint256 maxTokenPerUser_,
         uint32 startTime_,
         uint32 endTime_)
     {
         _owner = msg.sender;
-        require(projectId > 0);
-        projectId = projectId;
         projectToken = IERC20(tokenAdd_);
         principalToken = IERC20(principal_);
-        _admin = admin_;
         price = price_;
         totalTokenSupply = totalTokenSupply_;
         nftAddress = nftAddress_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+    }
+
+    function initialize(address owner, address admin) external {
+        require(owner == msg.sender);
+        require(admin == msg.sender);
+        _owner = owner;
+        _admin = admin;
     }
 
     // ============= Owner/Admin Actions =================
@@ -110,7 +112,7 @@ contract PrivateSale {
         projectToken.safeTransfer(to_, value);
     }
 
-    function payoutFor(uint256 amount) internal returns(uint256){
+    function payoutFor(uint256 amount) internal view returns(uint256){
         return FixedPoint.fraction(amount, price).decode112with18();
     }
 }

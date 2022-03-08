@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "./library/FixedPoint.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
@@ -24,6 +24,7 @@ contract PublicSale {
     uint32 public endTimestamp;
     uint256 public maxTokenPerUser; // Max Bar on a user irrespective of the stake amount
     bool public contractStatus;
+    string ipfsId;
 
     IERC20 private projectToken;
     IERC20 private principalToken;
@@ -38,10 +39,8 @@ contract PublicSale {
     }
 
     constructor (
-        uint32 projectId_,
         address tokenAdd_,
         address principal_,
-        address admin_,
         uint256 price_,
         uint256 totalTokenSupply_,
         address stakedTokenAddress_,
@@ -50,11 +49,8 @@ contract PublicSale {
         uint32 endTime_)
     {
         _owner = msg.sender;
-        require(projectId > 0);
-        projectId = projectId;
         projectToken = IERC20(tokenAdd_);
         principalToken = IERC20(principal_);
-        _admin = admin_;
         price = price_;
         totalTokenSupply = totalTokenSupply_;
         stakedTokenAddress = stakedTokenAddress_;
@@ -62,6 +58,13 @@ contract PublicSale {
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+    }
+
+    function initialize(address owner, address admin) external {
+        require(owner == msg.sender);
+        require(admin == msg.sender);
+        _owner = owner;
+        _admin = admin;
     }
 
     receive() external payable{
@@ -114,14 +117,14 @@ contract PublicSale {
         projectToken.safeTransfer(to_, value);
     }
 
-    function checkMaxPerUser(address to_, uint256 value) internal {
+    function checkMaxPerUser(address to_, uint256 value) internal view {
         uint256 stakedAmount = IERC20(stakedTokenAddress).balanceOf(to_);
         uint256 maximumToken = stakedAmount.sqrrt().mul(amountPerTokenStaked);
         maximumToken = maximumToken.min(maxTokenPerUser);
         require(userToTokenAmount[to_].add(value) < maximumToken, "Token amount exceed");
     }
 
-    function payoutFor(uint256 amount) internal returns(uint256){
+    function payoutFor(uint256 amount) internal view returns(uint256){
         return FixedPoint.fraction(amount, price).decode112with18();
     }
 }

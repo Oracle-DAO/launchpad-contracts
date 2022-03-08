@@ -47,18 +47,21 @@ contract CorePad is Ownable {
         uint32 lockingTerm;
     }
 
+    struct ProjectSaleTime {
+        uint32 startTimestamp;
+        uint32 endTimestamp;
+    }
+
     struct ProjectInfo {
-        uint32 projectId;
         string ipfsId;
         address projectToken;
         address principalToken;
-        uint32 startTimestamp;
-        uint32 endTimestamp;
-//        uint256 totalAmountRaised;
         uint256 totalAmountToRaise;
         TokenInfo tokenInfo;
         SaleType saleType;
+        ProjectSaleTime projectSaleTime;
         address admin;
+        bool isValue;
 //        TokenVestingInfo tokenVestingInfo;
 //        AmountVestingInfo amountVestingInfo;
 //        bool lock;
@@ -67,104 +70,93 @@ contract CorePad is Ownable {
     mapping(uint32 => ProjectInfo) public projectInfoMapping;
     uint256 constant public PRICE_DECIMALS = 1e18;
 
-    uint32 private _projectId;
+    uint32 private projectId;
     mapping(uint32 => address) private projectMapping;
     mapping(uint32 => uint32) private projectToRateMapping;
 
-    address private stakedTokenAddress;
-    address private nftAddressForPrivateSale;
-    address private ecosystemManager;
+    address private _stakedTokenAddress;
+    address private _nftAddressForPrivateSale;
+    address private _ecosystemManager;
 
     uint256 private _totalPlatformFee;
 
     constructor (address stakedTokenAddress_) {
-        require(stakedTokenAddress != address(0));
-        stakedTokenAddress = stakedTokenAddress_;
-        _projectId = 0;
+        require(stakedTokenAddress_ != address(0));
+        _stakedTokenAddress = stakedTokenAddress_;
+        projectId = 0;
     }
 
-    function setNFTAddress(address _nftAddress) external onlyOwner {
-        require(_nftAddress != address(0));
-        nftAddressForPrivateSale = _nftAddress;
+    function setNFTAddress(address nftAddress_) external onlyOwner {
+        require(nftAddress_ != address(0));
+        _nftAddressForPrivateSale = nftAddress_;
     }
 
-    function addProject(
-        string memory ipfsId_,
-        address projectTokenAdd_,
+    function addProject(SaleType saleType_,
+        address projectTokenAddress_,
         address principalToken_,
         address adminAddress_,
+        address projectSaleContractAddress_)
+    external onlyOwner returns(uint32) {
+        require(projectTokenAddress_ != address(0));
+        require(principalToken_ != address(0));
+        require(adminAddress_ != address(0));
+        require(projectSaleContractAddress_ != address(0));
+        projectId += 1;
+
+        ProjectInfo memory projectInfo;
+
+        projectInfo.projectToken = projectTokenAddress_;
+        projectInfo.principalToken = principalToken_;
+        projectInfo.admin = adminAddress_;
+        projectInfo.saleType = saleType_;
+        projectInfo.isValue = true;
+
+        projectMapping[projectId] = projectSaleContractAddress_;
+        projectInfoMapping[projectId] = projectInfo;
+        return projectId;
+    }
+
+    function addProjectMetaData(
+        uint32 projectId_,
         uint32 startTime_,
         uint32 endTime_,
         uint256 amountToRaise_,
         uint256 price_,
         uint256 maxTokenPerUser_,
-        uint256 tokenTotalSupply_,
-        SaleType saleType
-    ) external onlyOwner returns(uint32) {
-        _projectId += 1;
-        require(projectTokenAdd_ != address(0));
-        require(principalToken_ != address(0));
-        require(adminAddress_ != address(0));
+        uint256 tokenTotalSupply_) external onlyOwner {
+        require(projectInfoMapping[projectId_].isValue, "Project Id invalid");
         require(startTime_ < block.timestamp, "Invalid start time");
-        require(adminAddress_ != address(0), "admin address empty");
         require(endTime_ > startTime_, "Invalid end timestamp");
-        require(
-            endTime_ > block.timestamp, "Invalid End timestamp");
+        require(endTime_ > block.timestamp, "Invalid End timestamp");
         require(amountToRaise_ > 0);
         require(price_ > 0);
 
-        address contractAdd;
+        projectInfoMapping[projectId_].projectSaleTime = ProjectSaleTime({
+            startTimestamp: startTime_,
+            endTimestamp: endTime_
+        });
 
-        TokenInfo memory tokenInfo = TokenInfo({
+        projectInfoMapping[projectId_].tokenInfo = TokenInfo({
             totalTokenSupply: tokenTotalSupply_,
             price: price_,
             maxTokenPerUser: maxTokenPerUser_
         });
 
-
-        projectInfoMapping[_projectId] = ProjectInfo({
-            projectId: _projectId,
-            projectToken: projectTokenAdd_,
-            ipfsId: ipfsId_,
-            principalToken: principalToken_,
-            startTimestamp: startTime_,
-            endTimestamp: endTime_,
-            totalAmountToRaise: amountToRaise_,
-            tokenInfo: tokenInfo,
-            saleType: saleType,
-            admin: adminAddress_
-        });
-
-        if(saleType == SaleType.COMMUNITY){
-            CommunitySale communitySale = new CommunitySale(_projectId, projectTokenAdd_, principalToken_, adminAddress_,
-                price_, tokenTotalSupply_, stakedTokenAddress, maxTokenPerUser_, startTime_, endTime_);
-            projectMapping[_projectId] = address(communitySale);
-        }
-        else if(saleType == SaleType.PRIVATE){
-            PrivateSale privateSale = new PrivateSale(_projectId, projectTokenAdd_, principalToken_, adminAddress_,
-                price_, tokenTotalSupply_, nftAddressForPrivateSale, maxTokenPerUser_, startTime_, endTime_);
-            projectMapping[_projectId] = address(privateSale);
-        }
-        else{
-            PublicSale publicSale = new PublicSale(_projectId, projectTokenAdd_, principalToken_, adminAddress_,
-                price_, tokenTotalSupply_, stakedTokenAddress, maxTokenPerUser_, startTime_, endTime_);
-            projectMapping[_projectId] = address(publicSale);
-        }
-        return _projectId;
+        projectInfoMapping[projectId_].totalAmountToRaise = amountToRaise_;
     }
 
     function getProjectContractAddress(uint8 projectId_) external view returns (address) {
-        require(projectId_ <= _projectId, "Invalid ProjectId");
+        require(projectId_ <= projectId, "Invalid ProjectId");
         return projectMapping[projectId_];
     }
 
     function setRateInfo(uint8 projectId_, uint32 ratePercent_) external onlyOwner {
-        require(projectId_ <= _projectId, "Invalid ProjectId");
+        require(projectId_ <= projectId, "Invalid ProjectId");
         projectToRateMapping[projectId_] = ratePercent_;
     }
 
     function withdrawRaisedAmount(uint8 projectId_) external onlyOwner {
-        require(projectId_ <= _projectId, "Invalid ProjectId");
+        require(projectId_ <= projectId, "Invalid ProjectId");
         address saleContract = projectMapping[projectId_];
         uint256 totalRaisedAmount = ISale(saleContract).withdrawRaisedAmount();
 
@@ -175,7 +167,7 @@ contract CorePad is Ownable {
         _totalPlatformFee += platformFee;
 
         ProjectInfo memory projectInfo = projectInfoMapping[projectId_];
-        IERC20(projectInfo.principalToken).transfer(ecosystemManager, platformFee);
+        IERC20(projectInfo.principalToken).transfer(_ecosystemManager, platformFee);
 
         IERC20(projectInfo.principalToken).transfer(projectInfo.admin, payoutAmount);
     }
@@ -184,8 +176,20 @@ contract CorePad is Ownable {
         return _totalPlatformFee;
     }
 
-    function projectId() external view returns(uint256) {
-        return _projectId;
+    function getProjectId() external view returns(uint256) {
+        return projectId;
+    }
+
+    function getStakedAddress() external view returns(address) {
+        return _stakedTokenAddress;
+    }
+
+    function getNFTAddressForPrivateSale() external view returns(address) {
+        return _nftAddressForPrivateSale;
+    }
+
+    function getEcosystemManager() external view returns(address) {
+        return _ecosystemManager;
     }
 
 }
