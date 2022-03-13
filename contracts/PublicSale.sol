@@ -162,4 +162,42 @@ contract PublicSale {
     function getIpfsId() external view returns(string memory){
         return ipfsId;
     }
+
+    function getProjectDetails() external view returns(
+        address projectToken_,
+        address principalToken_,
+        string memory ipfsId_,
+        bool contractStatus_
+    ){
+        principalToken_ = address(principalToken);
+        projectToken_ = address(projectToken);
+        ipfsId_ = ipfsId;
+        contractStatus_ = contractStatus;
+    }
+
+    function getTokenInfo() external view returns(
+        uint256 totalTokenSupply_,
+        address projectToken_,
+        uint256 tokenPrice_
+    ){
+        totalTokenSupply_ = totalTokenSupply;
+        projectToken_ = address(projectToken);
+        tokenPrice_ = price;
+    }
+
+    function getAmountInfo() external view returns(
+        uint256 totalAmountToRaise_,
+        uint256 totalAmountRaised_
+    ) {
+        totalAmountRaised_ = totalAmountRaised;
+        totalAmountToRaise_ = totalAmountToRaise;
+    }
+
+    function getProjectTimeInfo() external view returns(
+        uint32 startTimestamp_,
+        uint32 endTimestamp_
+    ){
+        startTimestamp_ = startTimestamp;
+        endTimestamp_ = endTimestamp;
+    }
 }
