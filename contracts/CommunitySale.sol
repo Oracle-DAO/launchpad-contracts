@@ -59,11 +59,11 @@ contract CommunitySale {
         endTimestamp = endTime_;
     }
 
-    function initialize(address owner, address admin) external {
-        require(owner == msg.sender);
-        require(admin == msg.sender);
-        _owner = owner;
-        _admin = admin;
+    function initialize(address owner_, address admin_) external {
+        require(owner_ == msg.sender);
+        require(admin_ == msg.sender);
+        _owner = owner_;
+        _admin = admin_;
     }
 
     receive() external payable{
@@ -149,5 +149,17 @@ contract CommunitySale {
 
     function payoutFor(uint256 amount) internal view returns(uint256){
         return FixedPoint.fraction(amount, price).decode112with18();
+    }
+
+    function owner() external view returns(address){
+        return _owner;
+    }
+
+    function admin() external view returns(address){
+        return _admin;
+    }
+
+    function getProjectTokenAddress() external view returns(address){
+        return address(projectToken);
     }
 }

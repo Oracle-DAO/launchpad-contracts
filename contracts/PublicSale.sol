@@ -5,6 +5,7 @@ import "./library/FixedPoint.sol";
 
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
+import "hardhat/console.sol";
 
 contract PublicSale {
 
@@ -58,13 +59,14 @@ contract PublicSale {
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+        contractStatus = true;
     }
 
-    function initialize(address owner, address admin) external {
-        require(owner == msg.sender);
-        require(admin == msg.sender);
-        _owner = owner;
-        _admin = admin;
+    function initialize(address owner_, address admin_) external {
+        require(owner_ != address(0));
+        require(admin_ != address(0));
+        _owner = owner_;
+        _admin = admin_;
     }
 
     receive() external payable{
@@ -77,7 +79,7 @@ contract PublicSale {
     }
 
     function setStakedTokenAddress(address stakeTokenAddress_) external returns(address) {
-        require(msg.sender == _owner, "Invalid User");
+        require(msg.sender == _owner, "Caller not owner");
         require(stakeTokenAddress_ != address(0));
         stakedTokenAddress = stakeTokenAddress_;
         return stakedTokenAddress;
@@ -91,22 +93,31 @@ contract PublicSale {
 
     function withdrawRaisedAmount() external returns(uint256) {
         require(_owner == msg.sender);
-        uint256 balance = projectToken.balanceOf(address(this));
+        uint256 balance = principalToken.balanceOf(address(this));
         principalToken.safeTransfer(msg.sender, balance);
         return balance;
     }
 
+    function setTimeInfo(uint32 startTime_, uint32 endTime_) external onlyCaller {
+        require(startTime_ != 0 || endTime_ != 0, "Both timestamp cannot be 0");
+        if(startTime_ != 0){
+            startTimestamp = startTime_;
+        }
+        if(endTime_!= 0){
+            endTimestamp = endTime_;
+        }
+    }
     // ============= User Actions =================
 
     // don't forget to approve the principal token
     function participate(address to_, uint256 amount) external {
+        require(contractStatus, "Sale Contract is Inactive");
         require(amount > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
         require(totalAmountRaised.add(amount) > totalAmountToRaise, "Amount exceeds total amount to raise");
-
         uint256 value = payoutFor(amount);
-        checkMaxPerUser(to_, value);
+        checkMaxTokenForUser(to_, value);
         if(userToTokenAmount[to_]  == 0){
             totalParticipatedUser += 1;
         }
@@ -117,14 +128,38 @@ contract PublicSale {
         projectToken.safeTransfer(to_, value);
     }
 
-    function checkMaxPerUser(address to_, uint256 value) internal view {
-        uint256 stakedAmount = IERC20(stakedTokenAddress).balanceOf(to_);
-        uint256 maximumToken = stakedAmount.sqrrt().mul(amountPerTokenStaked);
-        maximumToken = maximumToken.min(maxTokenPerUser);
-        require(userToTokenAmount[to_].add(value) < maximumToken, "Token amount exceed");
+    function payoutFor(uint256 amount) public view returns(uint256){
+        return ((FixedPoint.fraction(amount, price).decode112with18()).div(1e15)).mul(1e15);
     }
 
-    function payoutFor(uint256 amount) internal view returns(uint256){
-        return FixedPoint.fraction(amount, price).decode112with18();
+    function checkMaxTokenForUser(address to_) public view returns(uint256) {
+        uint256 stakedAmount = IERC20(stakedTokenAddress).balanceOf(to_);
+        uint256 maximumToken = stakedAmount.sqrrt().mul(amountPerTokenStaked);
+        return maximumToken.min(maxTokenPerUser);
+    }
+
+    function checkMaxTokenForUser(address to_, uint256 value) internal view {
+        uint256 maxTokenForUser = checkMaxTokenForUser(to_);
+        require(userToTokenAmount[to_].add(value) < maxTokenForUser, "Token amount exceed");
+    }
+
+    function owner() external view returns(address){
+        return _owner;
+    }
+
+    function admin() external view returns(address){
+        return _admin;
+    }
+
+    function getProjectTokenAddress() external view returns(address){
+        return address(projectToken);
+    }
+
+    function getStakedTokenAddress() external view returns(address){
+        return stakedTokenAddress;
+    }
+
+    function getIpfsId() external view returns(string memory){
+        return ipfsId;
     }
 }

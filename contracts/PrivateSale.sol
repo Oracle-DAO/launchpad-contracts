@@ -54,13 +54,14 @@ contract PrivateSale {
         nftAddress = nftAddress_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+        contractStatus = true;
     }
 
-    function initialize(address owner, address admin) external {
-        require(owner == msg.sender);
-        require(admin == msg.sender);
-        _owner = owner;
-        _admin = admin;
+    function initialize(address owner_, address admin_) external {
+        require(owner_ == msg.sender);
+        require(admin_ == msg.sender);
+        _owner = owner_;
+        _admin = admin_;
     }
 
     // ============= Owner/Admin Actions =================
@@ -96,6 +97,7 @@ contract PrivateSale {
 
     // don't forget to approve the principal token
     function participate(address to_, uint256 amount) external {
+        require(contractStatus, "Sale Contract is Inactive");
         require(amount > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
@@ -115,4 +117,21 @@ contract PrivateSale {
     function payoutFor(uint256 amount) internal view returns(uint256){
         return FixedPoint.fraction(amount, price).decode112with18();
     }
+
+    function owner() external view returns(address){
+        return _owner;
+    }
+
+    function admin() external view returns(address){
+        return _admin;
+    }
+
+    function getProjectTokenAddress() external view returns(address){
+        return address(projectToken);
+    }
+
+    function getNFTAddress() external view returns(address){
+        return nftAddress;
+    }
+
 }

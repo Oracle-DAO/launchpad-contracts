@@ -11,6 +11,8 @@ import "./PublicSale.sol";
 import "./PrivateSale.sol";
 import "./CommunitySale.sol";
 
+import "hardhat/console.sol";
+
 contract CorePad is Ownable {
 
     using FixedPoint for *;
@@ -91,6 +93,11 @@ contract CorePad is Ownable {
         _nftAddressForPrivateSale = nftAddress_;
     }
 
+    function setEcosystemManager(address ecosystemManager_) external onlyOwner {
+        require(ecosystemManager_ != address(0));
+        _ecosystemManager = ecosystemManager_;
+    }
+
     function addProject(SaleType saleType_,
         address projectTokenAddress_,
         address principalToken_,
@@ -162,7 +169,11 @@ contract CorePad is Ownable {
 
         uint32 ratePercent =  projectToRateMapping[projectId_];
         uint256 platformFee = totalRaisedAmount.mul(ratePercent).div(1e5);
-        uint256 payoutAmount = totalRaisedAmount.sub(ratePercent);
+        uint256 payoutAmount = totalRaisedAmount.sub(platformFee);
+
+        console.log("totalRaisedAmount is ", totalRaisedAmount);
+        console.log("platFormFee is ", platformFee);
+        console.log("payout amount is ", payoutAmount);
 
         _totalPlatformFee += platformFee;
 
@@ -190,6 +201,10 @@ contract CorePad is Ownable {
 
     function getEcosystemManager() external view returns(address) {
         return _ecosystemManager;
+    }
+
+    function getRateInfoForProject(uint32 projectId_) external view onlyOwner returns(uint32) {
+        return projectToRateMapping[projectId_];
     }
 
 }

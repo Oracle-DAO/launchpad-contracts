@@ -9,7 +9,9 @@ contract MockStakedToken is Context, Ownable, ERC20 {
 
     using SafeMath for uint256;
 
-    constructor() ERC20('MockStakedToken', 'MST') {}
+    constructor() ERC20('MockStakedToken', 'MST') {
+        _mint(msg.sender, 100*(10**18));
+    }
 
     function mint(address account, uint256 amount) external onlyOwner {
         _mint(account, amount);
