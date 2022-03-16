@@ -9,6 +9,7 @@ async function main() {
   const mockProjectToken = readContractAddress("/MockProjectToken.json");
   const mockStableCoin = readContractAddress("/MockStableCoin.json");
   const price = constants.tokenPrice;
+  const totalAmountToRaise = constants.amountToRaise;
   const totalSupply = constants.totalTokenSupply;
   const stakedTokenAddress = readContractAddress("/MockStakedToken.json");
   const maxTokenPerUser = constants.maxTokenPerUser;
@@ -20,6 +21,7 @@ async function main() {
     mockProjectToken,
     mockStableCoin,
     price,
+    totalAmountToRaise,
     totalSupply,
     stakedTokenAddress,
     maxTokenPerUser,

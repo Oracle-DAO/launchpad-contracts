@@ -41,6 +41,7 @@ contract PrivateSale {
         address tokenAdd_,
         address principal_,
         uint256 price_,
+        uint256 totalAmountToRaise_,
         uint256 totalTokenSupply_,
         address nftAddress_,
         uint32 startTime_,
@@ -50,6 +51,7 @@ contract PrivateSale {
         projectToken = IERC20(tokenAdd_);
         principalToken = IERC20(principal_);
         price = price_;
+        totalAmountToRaise = totalAmountToRaise_;
         totalTokenSupply = totalTokenSupply_;
         nftAddress = nftAddress_;
         startTimestamp = startTime_;

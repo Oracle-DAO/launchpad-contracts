@@ -22,6 +22,8 @@ async function main() {
   const publicSaleFact = await ethers.getContractFactory("PublicSale");
   const publicSale = publicSaleFact.attach(publicSaleAdd);
 
+  // console.log(await publicSale.getAmountInfo());
+
   const CorePadFact = await ethers.getContractFactory("CorePad");
   const corePad = CorePadFact.attach(corePadAdd);
 

@@ -43,6 +43,7 @@ contract PublicSale {
         address tokenAdd_,
         address principal_,
         uint256 price_,
+        uint256 totalAmountToRaise_,
         uint256 totalTokenSupply_,
         address stakedTokenAddress_,
         uint256 maxTokenPerUser_,
@@ -53,6 +54,7 @@ contract PublicSale {
         projectToken = IERC20(tokenAdd_);
         principalToken = IERC20(principal_);
         price = price_;
+        totalAmountToRaise = totalAmountToRaise_;
         totalTokenSupply = totalTokenSupply_;
         stakedTokenAddress = stakedTokenAddress_;
         amountPerTokenStaked = 1e9;
