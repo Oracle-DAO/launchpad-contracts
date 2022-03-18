@@ -48,7 +48,8 @@ contract PublicSale {
         address stakedTokenAddress_,
         uint256 maxTokenPerUser_,
         uint32 startTime_,
-        uint32 endTime_)
+        uint32 endTime_,
+        string memory ipfsId_)
     {
         _owner = msg.sender;
         projectToken = IERC20(tokenAdd_);
@@ -61,6 +62,7 @@ contract PublicSale {
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+        ipfsId = ipfsId_;
         contractStatus = true;
     }
 
@@ -117,7 +119,7 @@ contract PublicSale {
         require(amount > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
-        require(totalAmountRaised.add(amount) > totalAmountToRaise, "Amount exceeds total amount to raise");
+        require(totalAmountRaised.add(amount) <= totalAmountToRaise, "Amount exceeds total amount to raise");
         uint256 value = payoutFor(amount);
         checkMaxTokenForUser(to_, value);
         if(userToTokenAmount[to_]  == 0){
