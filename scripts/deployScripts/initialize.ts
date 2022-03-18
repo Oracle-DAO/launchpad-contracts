@@ -47,7 +47,8 @@ async function main() {
     constants.amountToRaise,
     constants.tokenPrice,
     constants.maxTokenPerUser,
-    constants.totalTokenSupply
+    constants.totalTokenSupply,
+      ""
   );
 
   await stakedToken.mint(deployer.address, "10000000000000000000000");

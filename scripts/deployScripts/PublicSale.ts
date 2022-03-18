@@ -26,7 +26,8 @@ async function main() {
     stakedTokenAddress,
     maxTokenPerUser,
     startTime,
-    endTime
+    endTime,
+      ""
   );
   await publicSale.deployed();
 
