@@ -130,7 +130,8 @@ contract CorePad is Ownable {
         uint256 amountToRaise_,
         uint256 price_,
         uint256 maxTokenPerUser_,
-        uint256 tokenTotalSupply_) external onlyOwner {
+        uint256 tokenTotalSupply_,
+        string memory ipfsId_) external onlyOwner {
         require(projectInfoMapping[projectId_].isValue, "Project Id invalid");
         require(startTime_ < block.timestamp, "Invalid start time");
         require(endTime_ > startTime_, "Invalid end timestamp");
@@ -150,6 +151,7 @@ contract CorePad is Ownable {
         });
 
         projectInfoMapping[projectId_].totalAmountToRaise = amountToRaise_;
+        projectInfoMapping[projectId_].ipfsId = ipfsId_;
     }
 
     function getProjectContractAddress(uint8 projectId_) external view returns (address) {

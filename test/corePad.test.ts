@@ -46,21 +46,25 @@ describe("Core Pad", async () => {
       projectToken.address,
       stableCoin.address,
       constants.tokenPrice,
+      constants.amountToRaise,
       constants.totalTokenSupply,
       stakedToken.address,
       constants.maxTokenPerUser,
       startTime,
-      endTime
+      endTime,
+        ""
     );
     project2 = await project2Fact.deploy(
       projectToken.address,
       stableCoin.address,
       constants.tokenPrice,
+      constants.amountToRaise,
       constants.totalTokenSupply,
       stakedToken.address,
       constants.maxTokenPerUser,
       startTime,
-      endTime
+      endTime,
+        ""
     );
 
     console.log(project1.address);
@@ -123,7 +127,8 @@ describe("Core Pad", async () => {
       constants.amountToRaise,
       constants.tokenPrice,
       constants.maxTokenPerUser,
-      constants.totalTokenSupply
+      constants.totalTokenSupply,
+        ""
     );
     //
     const projectInfo = await corePad.projectInfoMapping(1);
@@ -149,11 +154,11 @@ describe("Core Pad", async () => {
   });
 
   it("Withdraw Raised Amount", async function () {
-    await stableCoin.mint(user1.address, "10000000000000000000");
-    await stableCoin.mint(user2.address, "10000000000000000000");
+    await stableCoin.mint(user1.address, "5000000000000000000");
+    await stableCoin.mint(user2.address, "5000000000000000000");
 
-    await stakedToken.mint(user1.address, "10000000000000000000");
-    await stakedToken.mint(user2.address, "10000000000000000000");
+    await stakedToken.mint(user1.address, "5000000000000000000");
+    await stakedToken.mint(user2.address, "5000000000000000000");
 
     await stableCoin
       .connect(user1)
@@ -165,29 +170,29 @@ describe("Core Pad", async () => {
     await projectToken.mint(project1.address, constants.totalTokenSupply);
     await project1
       .connect(user1)
-      .participate(user1.address, "1000000000000000000");
+      .participate(user1.address, "500000000000000000");
 
     await project1
       .connect(user2)
-      .participate(user2.address, "1000000000000000000");
+      .participate(user2.address, "500000000000000000");
 
     expect(await projectToken.balanceOf(user1.address)).to.equal(
-      "1000000000000000000"
+      "500000000000000000"
     );
 
     expect(await projectToken.balanceOf(user2.address)).to.equal(
-      "1000000000000000000"
+      "500000000000000000"
     );
     expect(await project1.totalParticipatedUser()).to.equal(2);
-    expect(await project1.totalAmountRaised()).to.equal("2000000000000000000");
+    expect(await project1.totalAmountRaised()).to.equal("1000000000000000000");
 
     expect(await stableCoin.balanceOf(project1.address)).to.equal(
-      "2000000000000000000"
+      "1000000000000000000"
     );
 
     expect(await corePad.getRateInfoForProject(1)).to.equal(5000);
     await corePad.withdrawRaisedAmount(1);
 
-    expect(await corePad.getTotalPlatformFee()).to.equal("100000000000000000");
+    expect(await corePad.getTotalPlatformFee()).to.equal("50000000000000000");
   });
 });

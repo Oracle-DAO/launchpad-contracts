@@ -38,11 +38,13 @@ describe("Public Sale Contract", async () => {
       projectToken.address,
       stableCoin.address,
       constants.tokenPrice,
+      constants.amountToRaise,
       constants.totalTokenSupply,
       stakedToken.address,
       constants.maxTokenPerUser,
       startTime,
-      endTime
+      endTime,
+        ""
     );
 
     await publicSale.initialize(corePad.address, admin1.address);

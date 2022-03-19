@@ -45,7 +45,8 @@ contract PrivateSale {
         uint256 totalTokenSupply_,
         address nftAddress_,
         uint32 startTime_,
-        uint32 endTime_)
+        uint32 endTime_,
+        string memory ipfsId_)
     {
         _owner = msg.sender;
         projectToken = IERC20(tokenAdd_);
@@ -56,6 +57,7 @@ contract PrivateSale {
         nftAddress = nftAddress_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+        ipfsId = ipfsId_;
         contractStatus = true;
     }
 

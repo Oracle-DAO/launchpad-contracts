@@ -47,7 +47,8 @@ contract CommunitySale {
         address stakedTokenAddress_,
         uint256 maxTokenPerUser_,
         uint32 startTime_,
-        uint32 endTime_)
+        uint32 endTime_,
+        string memory ipfsId_)
     {
         _owner = msg.sender;
         projectToken = IERC20(tokenAdd_);
@@ -59,6 +60,7 @@ contract CommunitySale {
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
+        ipfsId = ipfsId_;
     }
 
     function initialize(address owner_, address admin_) external {
