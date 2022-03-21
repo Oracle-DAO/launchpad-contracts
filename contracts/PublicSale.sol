@@ -144,7 +144,7 @@ contract PublicSale {
 
     function checkMaxTokenForUser(address to_, uint256 value) internal view {
         uint256 maxTokenForUser = checkMaxTokenForUser(to_);
-        require(userToTokenAmount[to_].add(value) < maxTokenForUser, "Token amount exceed");
+        require(userToTokenAmount[to_].add(value) <= maxTokenForUser, "Token amount exceed");
     }
 
     function owner() external view returns(address){

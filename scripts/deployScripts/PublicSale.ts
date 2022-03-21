@@ -14,7 +14,8 @@ async function main() {
   const stakedTokenAddress = readContractAddress("/MockStakedToken.json");
   const maxTokenPerUser = constants.maxTokenPerUser;
   const startTime = Math.round(Date.now() / 1000);
-  const endTime = startTime + 60 * 60 * 5;
+  const endTime = startTime + 60 * 60 * 1000;
+  const ipfsId = "QmUhzdNsJTVdgRaQrPjufvxSiyWCoesk8L8BamyzaeQXwz";
 
   const PublicSaleFactory = await ethers.getContractFactory("PublicSale");
   const publicSale = await PublicSaleFactory.deploy(
@@ -27,7 +28,7 @@ async function main() {
     maxTokenPerUser,
     startTime,
     endTime,
-      ""
+    ipfsId
   );
   await publicSale.deployed();
 

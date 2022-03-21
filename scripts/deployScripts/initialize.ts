@@ -31,6 +31,7 @@ async function main() {
 
   const startTime = await publicSale.startTimestamp();
   const endTime = await publicSale.endTimestamp();
+  const ipfsId = "QmUhzdNsJTVdgRaQrPjufvxSiyWCoesk8L8BamyzaeQXwz";
 
   await corePad.addProject(
     0,
@@ -48,7 +49,7 @@ async function main() {
     constants.tokenPrice,
     constants.maxTokenPerUser,
     constants.totalTokenSupply,
-      ""
+    ipfsId
   );
 
   await stakedToken.mint(deployer.address, "10000000000000000000000");
