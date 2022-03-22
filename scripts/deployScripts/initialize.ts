@@ -22,8 +22,10 @@ async function main() {
   const publicSaleFact = await ethers.getContractFactory("PublicSale");
   const publicSale = publicSaleFact.attach(publicSaleAdd);
 
+  // console.log(await stableCoin.allowance(deployer.address, publicSale.address));
+  // await publicSale.participate(deployer.address, "1000000000000000000");
   // console.log(await publicSale.getAmountInfo());
-
+  //
   const CorePadFact = await ethers.getContractFactory("CorePad");
   const corePad = CorePadFact.attach(corePadAdd);
 
@@ -52,7 +54,7 @@ async function main() {
     ipfsId
   );
 
-  await stakedToken.mint(deployer.address, "10000000000000000000000");
+  await projectToken.mint(publicSale.address, constants.totalTokenSupply);
 
   console.log("Contracts has been initialized");
   console.log("Contract Address of MockStableCoin", mockStableCoinAdd);
