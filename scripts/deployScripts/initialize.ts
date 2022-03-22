@@ -16,8 +16,6 @@ async function main() {
   const projectToken = await projectTokenFact.attach(mockProjectTokenAdd);
   const stableCoinFact = await ethers.getContractFactory("MockStableCoin");
   const stableCoin = await stableCoinFact.attach(mockStableCoinAdd);
-  const stakedTokenFact = await ethers.getContractFactory("MockStakedToken");
-  const stakedToken = await stakedTokenFact.attach(mockStakedTokenAdd);
 
   const publicSaleFact = await ethers.getContractFactory("PublicSale");
   const publicSale = publicSaleFact.attach(publicSaleAdd);
@@ -51,7 +49,7 @@ async function main() {
       ""
   );
 
-  await stakedToken.mint(deployer.address, "10000000000000000000000");
+  await projectToken.mint(deployer.address, constants.totalTokenSupply);
 
   console.log("Contracts has been initialized");
   console.log("Contract Address of MockStableCoin", mockStableCoinAdd);
