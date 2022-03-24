@@ -42,6 +42,9 @@ const config: HardhatUserConfig = {
 
     oasis: {
       url: "https://testnet.emerald.oasis.dev",
+      accounts: [
+
+      ],
     },
   },
 };

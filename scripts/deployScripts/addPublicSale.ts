@@ -46,10 +46,10 @@ async function main() {
     constants.tokenPrice,
     constants.maxTokenPerUser,
     constants.totalTokenSupply,
-      ""
+      "QmUhzdNsJTVdgRaQrPjufvxSiyWCoesk8L8BamyzaeQXwz"
   );
 
-  await projectToken.mint(deployer.address, constants.totalTokenSupply);
+  await projectToken.mint(publicSale.address, constants.totalTokenSupply);
 
   console.log("Contracts has been initialized");
   console.log("Contract Address of MockStableCoin", mockStableCoinAdd);
