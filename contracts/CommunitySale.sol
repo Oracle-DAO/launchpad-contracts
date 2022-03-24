@@ -64,8 +64,8 @@ contract CommunitySale {
     }
 
     function initialize(address owner_, address admin_) external {
-        require(owner_ == msg.sender);
-        require(admin_ == msg.sender);
+        require(owner_ != address(0));
+        require(admin_ != address(0));
         _owner = owner_;
         _admin = admin_;
     }
@@ -131,7 +131,7 @@ contract CommunitySale {
         require(amount > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
-        require(totalAmountRaised.add(amount) > totalAmountToRaise, "Amount exceeds total amount to raise");
+        require(totalAmountRaised.add(amount) <= totalAmountToRaise, "Amount exceeds total amount to raise");
         uint256 platformFee = amount.mul(fee).div(1e5);
         uint256 payoutAmount = amount.sub(platformFee);
         uint256 value = payoutFor(payoutAmount);

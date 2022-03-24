@@ -11,10 +11,11 @@ async function main() {
   const price = constants.tokenPrice;
   const totalAmountToRaise = constants.amountToRaise;
   const totalSupply = constants.totalTokenSupply;
-  const stakedTokenAddress = readContractAddress("/MockStakedToken.json");
+  // const stakedTokenAddress = readContractAddress("/MockStakedToken.json");
+  const stakedTokenAddress = "0x4FDcdBC13285E82d7F472Bf3E87b1a0D89be6738";
   const maxTokenPerUser = constants.maxTokenPerUser;
   const startTime = Math.round(Date.now() / 1000);
-  const endTime = startTime + 60 * 60 * 5;
+  const endTime = startTime + 60 * 60 * 1000;
 
   const PublicSaleFactory = await ethers.getContractFactory("PublicSale");
   const publicSale = await PublicSaleFactory.deploy(
@@ -27,7 +28,7 @@ async function main() {
     maxTokenPerUser,
     startTime,
     endTime,
-      ""
+      "QmUhzdNsJTVdgRaQrPjufvxSiyWCoesk8L8BamyzaeQXwz"
   );
   await publicSale.deployed();
 

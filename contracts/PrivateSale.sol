@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./library/FixedPoint.sol";
-
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
 
@@ -62,8 +62,8 @@ contract PrivateSale {
     }
 
     function initialize(address owner_, address admin_) external {
-        require(owner_ == msg.sender);
-        require(admin_ == msg.sender);
+        require(owner_ != address(0));
+        require(admin_ != address(0));
         _owner = owner_;
         _admin = admin_;
     }
@@ -75,10 +75,20 @@ contract PrivateSale {
     }
 
     function setNftAddress(address nftTokenAddress_) external returns(address) {
-        require(msg.sender == _owner, "Invalid User");
+        require(msg.sender == _owner, "Caller not owner");
         require(nftTokenAddress_ != address(0));
         nftAddress = nftTokenAddress_;
         return nftAddress;
+    }
+
+    function setTimeInfo(uint32 startTime_, uint32 endTime_) external onlyCaller {
+        require(startTime_ != 0 || endTime_ != 0, "Both timestamp cannot be 0");
+        if(startTime_ != 0){
+            startTimestamp = startTime_;
+        }
+        if(endTime_!= 0){
+            endTimestamp = endTime_;
+        }
     }
 
     function withdrawRemainingTokens(address to_) external onlyCaller returns(uint256) {
@@ -96,7 +106,7 @@ contract PrivateSale {
 
     // ============= User Actions =================
 
-    receive() external payable{
+    receive() external payable {
     }
 
     // don't forget to approve the principal token
@@ -105,9 +115,9 @@ contract PrivateSale {
         require(amount > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
-        require(totalAmountRaised.add(amount) > totalAmountToRaise, "Amount exceeds total amount to raise");
-
+        require(totalAmountRaised.add(amount) <= totalAmountToRaise, "Amount exceeds total amount to raise");
         uint256 value = payoutFor(amount);
+        isAllowedParticipation(to_);
         if(userToTokenAmount[to_]  == 0){
             totalParticipatedUser += 1;
         }
@@ -116,6 +126,10 @@ contract PrivateSale {
         userToTokenAmount[to_] = userToTokenAmount[to_].add(value);
         principalToken.safeTransferFrom(to_, address(this), amount);
         projectToken.safeTransfer(to_, value);
+    }
+
+    function isAllowedParticipation(address to_) internal view {
+        require(IERC721(nftAddress).balanceOf(to_) > 0, "No Nft present for the user");
     }
 
     function payoutFor(uint256 amount) internal view returns(uint256){
