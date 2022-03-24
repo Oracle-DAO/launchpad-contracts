@@ -14,7 +14,6 @@ contract PublicSale {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for uint32;
 
-    uint32 public projectId;
     mapping(address => uint256) public userToTokenAmount;
     uint256 public totalTokenSupply;
     uint256 public totalAmountRaised;
@@ -128,7 +127,7 @@ contract PublicSale {
 
         totalAmountRaised += amount;
         userToTokenAmount[to_] = userToTokenAmount[to_].add(value);
-        principalToken.safeTransferFrom(to_, address(this), amount);
+        principalToken.safeTransferFrom(msg.sender, address(this), amount);
         projectToken.safeTransfer(to_, value);
     }
 

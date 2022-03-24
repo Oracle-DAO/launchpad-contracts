@@ -5,8 +5,9 @@ import "./library/FixedPoint.sol";
 
 import "./library/LowGasSafeMath.sol";
 import "./library/SafeERC20.sol";
+import "./EIP712Whitelisting.sol";
 
-contract CommunitySale {
+contract CommunitySale is EIP712Whitelisting {
 
     using SafeERC20 for IERC20;
     using FixedPoint for *;
@@ -14,7 +15,7 @@ contract CommunitySale {
     using LowGasSafeMath for uint32;
 
     mapping(address => uint256) public userToTokenAmount;
-    mapping(address => uint8) public whiteListedUser;
+
     uint256 public totalTokenSupply;
     uint256 public totalAmountRaised;
     uint256 public totalAmountToRaise;
@@ -30,8 +31,6 @@ contract CommunitySale {
     IERC20 private principalToken;
     address private _admin;
     address private _owner;
-    address private stakedTokenAddress; // Token address which user need to stake for access
-    uint256 private fee;
 
     modifier onlyCaller() {
         require(_owner == msg.sender || _admin == msg.sender, "Caller Invalid");
@@ -44,11 +43,10 @@ contract CommunitySale {
         uint256 price_,
         uint256 totalAmountToRaise_,
         uint256 totalTokenSupply_,
-        address stakedTokenAddress_,
         uint256 maxTokenPerUser_,
         uint32 startTime_,
         uint32 endTime_,
-        string memory ipfsId_)
+        string memory ipfsId_) EIP712Whitelisting()
     {
         _owner = msg.sender;
         projectToken = IERC20(tokenAdd_);
@@ -56,7 +54,6 @@ contract CommunitySale {
         price = price_;
         totalAmountToRaise = totalAmountToRaise_;
         totalTokenSupply = totalTokenSupply_;
-        stakedTokenAddress = stakedTokenAddress_;
         maxTokenPerUser = maxTokenPerUser_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
@@ -79,18 +76,6 @@ contract CommunitySale {
         contractStatus = status;
     }
 
-    function setCommunityFee(uint256 fee_) external onlyCaller {
-        require(fee < 5000, "Fee cannot be greater than 5%");
-        fee = fee_;
-    }
-
-    function setStakedTokenAddress(address stakeTokenAddress_) external returns(address) {
-        require(msg.sender == _owner, "Invalid User");
-        require(stakeTokenAddress_ != address(0));
-        stakedTokenAddress = stakeTokenAddress_;
-        return stakedTokenAddress;
-    }
-
     function withdrawRemainingTokens(address to_) external onlyCaller returns(uint256) {
         uint256 balance = projectToken.balanceOf(address(this));
         projectToken.safeTransfer(to_, balance);
@@ -104,55 +89,41 @@ contract CommunitySale {
         return balance;
     }
 
-    // ============= User Actions =================
-
-    function _whitelistUser(address to_) internal {
-        whiteListedUser[to_] = 1;
-    }
-
-    function removeWhitelistedUser(address to_) external onlyCaller {
-        whiteListedUser[to_] = 0;
-    }
-
-    function whitelistUser(address to_) external onlyCaller {
-        _whitelistUser(to_);
-    }
-
-    function whiteListUsers(address[] calldata userList) external onlyCaller {
-        for(uint32 i=0; i<userList.length; i++){
-            _whitelistUser(userList[i]);
+    function setTimeInfo(uint32 startTime_, uint32 endTime_) external onlyCaller {
+        require(startTime_ != 0 || endTime_ != 0, "Both timestamp cannot be 0");
+        if(startTime_ != 0){
+            startTimestamp = startTime_;
+        }
+        if(endTime_!= 0){
+            endTimestamp = endTime_;
         }
     }
 
     // ============= User Actions =================
 
     // don't forget to approve the principal token
-    function participate(address to_, uint256 amount) external {
-        require(amount > 0, "invalid amount");
+    function participate(uint256 amount_, bytes calldata signature) external requiresWhitelist(signature) {
+        require(contractStatus, "Sale Contract is Inactive");
+        require(amount_ > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
-        require(totalAmountRaised.add(amount) <= totalAmountToRaise, "Amount exceeds total amount to raise");
-        uint256 platformFee = amount.mul(fee).div(1e5);
-        uint256 payoutAmount = amount.sub(platformFee);
-        uint256 value = payoutFor(payoutAmount);
-        require(userToTokenAmount[to_].add(value) < maxTokenPerUser, "Token amount for user exceed");
-
-        if(userToTokenAmount[to_]  == 0){
+        require(totalAmountRaised.add(amount_) <= totalAmountToRaise, "Amount exceeds total amount to raise");
+        uint256 value = payoutFor(amount_);
+        require(userToTokenAmount[msg.sender].add(value) <= maxTokenPerUser, "Token amount exceed");
+        if(userToTokenAmount[msg.sender]  == 0){
             totalParticipatedUser += 1;
         }
 
-        // platform fee for community member
-        principalToken.safeTransferFrom(msg.sender, _owner, platformFee);
-
-        totalAmountRaised += payoutAmount;
-        userToTokenAmount[to_] = userToTokenAmount[to_].add(value);
-
-        principalToken.safeTransferFrom(to_, address(this), payoutAmount);
-        projectToken.safeTransfer(to_, value);
+        totalAmountRaised += amount_;
+        userToTokenAmount[msg.sender] = userToTokenAmount[msg.sender].add(value);
+        principalToken.safeTransferFrom(msg.sender, address(this), amount_);
+        projectToken.safeTransfer(msg.sender, value);
     }
 
-    function payoutFor(uint256 amount) internal view returns(uint256){
-        return FixedPoint.fraction(amount, price).decode112with18();
+
+    // ============= GETTER =================
+    function payoutFor(uint256 amount) public view returns(uint256){
+        return ((FixedPoint.fraction(amount, price).decode112with18()).div(1e15)).mul(1e15);
     }
 
     function owner() external view returns(address){
@@ -165,5 +136,47 @@ contract CommunitySale {
 
     function getProjectTokenAddress() external view returns(address){
         return address(projectToken);
+    }
+
+    function getIpfsId() external view returns(string memory){
+        return ipfsId;
+    }
+
+    function getProjectDetails() external view returns(
+        address projectToken_,
+        address principalToken_,
+        string memory ipfsId_,
+        bool contractStatus_
+    ){
+        principalToken_ = address(principalToken);
+        projectToken_ = address(projectToken);
+        ipfsId_ = ipfsId;
+        contractStatus_ = contractStatus;
+    }
+
+    function getTokenInfo() external view returns(
+        uint256 totalTokenSupply_,
+        address projectToken_,
+        uint256 tokenPrice_
+    ){
+        totalTokenSupply_ = totalTokenSupply;
+        projectToken_ = address(projectToken);
+        tokenPrice_ = price;
+    }
+
+    function getAmountInfo() external view returns(
+        uint256 totalAmountToRaise_,
+        uint256 totalAmountRaised_
+    ) {
+        totalAmountRaised_ = totalAmountRaised;
+        totalAmountToRaise_ = totalAmountToRaise;
+    }
+
+    function getProjectTimeInfo() external view returns(
+        uint32 startTimestamp_,
+        uint32 endTimestamp_
+    ){
+        startTimestamp_ = startTimestamp;
+        endTimestamp_ = endTimestamp;
     }
 }

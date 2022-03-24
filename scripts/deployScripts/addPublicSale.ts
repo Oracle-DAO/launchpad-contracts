@@ -25,10 +25,10 @@ async function main() {
   const CorePadFact = await ethers.getContractFactory("CorePad");
   const corePad = CorePadFact.attach(corePadAdd);
 
-  await publicSale.initialize(corePad.address, admin.address);
-
   const startTime = await publicSale.startTimestamp();
   const endTime = await publicSale.endTimestamp();
+
+  await publicSale.initialize(corePad.address, admin.address);
 
   await corePad.addProject(
     0,

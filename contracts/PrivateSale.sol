@@ -22,6 +22,7 @@ contract PrivateSale {
     uint32 public totalParticipatedUser;
     uint32 public startTimestamp;
     uint32 public endTimestamp;
+    uint256 public maxTokenPerUser;
     bool public contractStatus;
     string ipfsId;
 
@@ -44,6 +45,7 @@ contract PrivateSale {
         uint256 totalAmountToRaise_,
         uint256 totalTokenSupply_,
         address nftAddress_,
+        uint256 maxTokenPerUser_,
         uint32 startTime_,
         uint32 endTime_,
         string memory ipfsId_)
@@ -54,6 +56,7 @@ contract PrivateSale {
         price = price_;
         totalAmountToRaise = totalAmountToRaise_;
         totalTokenSupply = totalTokenSupply_;
+        maxTokenPerUser = maxTokenPerUser_;
         nftAddress = nftAddress_;
         startTimestamp = startTime_;
         endTimestamp = endTime_;
@@ -117,6 +120,7 @@ contract PrivateSale {
         require(endTimestamp > block.timestamp, "project has ended");
         require(totalAmountRaised.add(amount) <= totalAmountToRaise, "Amount exceeds total amount to raise");
         uint256 value = payoutFor(amount);
+        require(userToTokenAmount[msg.sender].add(value) <= maxTokenPerUser, "Token amount exceed");
         isAllowedParticipation(to_);
         if(userToTokenAmount[to_]  == 0){
             totalParticipatedUser += 1;
@@ -124,7 +128,7 @@ contract PrivateSale {
 
         totalAmountRaised += amount;
         userToTokenAmount[to_] = userToTokenAmount[to_].add(value);
-        principalToken.safeTransferFrom(to_, address(this), amount);
+        principalToken.safeTransferFrom(msg.sender, address(this), amount);
         projectToken.safeTransfer(to_, value);
     }
 
@@ -150,6 +154,48 @@ contract PrivateSale {
 
     function getNFTAddress() external view returns(address){
         return nftAddress;
+    }
+
+    function getIpfsId() external view returns(string memory){
+        return ipfsId;
+    }
+
+    function getProjectDetails() external view returns(
+        address projectToken_,
+        address principalToken_,
+        string memory ipfsId_,
+        bool contractStatus_
+    ){
+        principalToken_ = address(principalToken);
+        projectToken_ = address(projectToken);
+        ipfsId_ = ipfsId;
+        contractStatus_ = contractStatus;
+    }
+
+    function getTokenInfo() external view returns(
+        uint256 totalTokenSupply_,
+        address projectToken_,
+        uint256 tokenPrice_
+    ){
+        totalTokenSupply_ = totalTokenSupply;
+        projectToken_ = address(projectToken);
+        tokenPrice_ = price;
+    }
+
+    function getAmountInfo() external view returns(
+        uint256 totalAmountToRaise_,
+        uint256 totalAmountRaised_
+    ) {
+        totalAmountRaised_ = totalAmountRaised;
+        totalAmountToRaise_ = totalAmountToRaise;
+    }
+
+    function getProjectTimeInfo() external view returns(
+        uint32 startTimestamp_,
+        uint32 endTimestamp_
+    ){
+        startTimestamp_ = startTimestamp;
+        endTimestamp_ = endTimestamp;
     }
 
 }

@@ -4,38 +4,37 @@ import { readContractAddress } from "../helpers";
 // eslint-disable-next-line node/no-missing-import
 import { constants } from "../constants";
 const corePadAdd = readContractAddress("/CorePad.json");
-const privateSaleAdd = readContractAddress("/PrivateSale.json");
+const communitySaleAdd = readContractAddress("/CommunitySale.json");
 const mockProjectTokenAdd = readContractAddress("/MockProjectToken.json");
 const mockStableCoinAdd = readContractAddress("/MockStableCoin.json");
 const mockStakedTokenAdd = readContractAddress("/MockStakedToken.json");
 
 async function main() {
-    const [deployer, admin] = await ethers.getSigners();
+    const [deployer, admin, whitelistSigningKey] = await ethers.getSigners();
 
     const projectTokenFact = await ethers.getContractFactory("MockProjectToken");
     const projectToken = await projectTokenFact.attach(mockProjectTokenAdd);
     const stableCoinFact = await ethers.getContractFactory("MockStableCoin");
     const stableCoin = await stableCoinFact.attach(mockStableCoinAdd);
 
-    const privateSaleFact = await ethers.getContractFactory("PrivateSale");
-    const privateSale = privateSaleFact.attach(privateSaleAdd);
-
-    // console.log(await publicSale.getAmountInfo());
+    const communitySaleFact = await ethers.getContractFactory("CommunitySale");
+    const communitySale = communitySaleFact.attach(communitySaleAdd);
 
     const CorePadFact = await ethers.getContractFactory("CorePad");
     const corePad = CorePadFact.attach(corePadAdd);
 
-    const startTime = await privateSale.startTimestamp();
-    const endTime = await privateSale.endTimestamp();
+    const startTime = await communitySale.startTimestamp();
+    const endTime = await communitySale.endTimestamp();
 
-    await privateSale.initialize(corePad.address, admin.address);
+    await communitySale.setWhitelistSigningAddress(whitelistSigningKey.address);
+    await communitySale.initialize(corePad.address, admin.address);
 
     await corePad.addProject(
         0,
         projectToken.address,
         stableCoin.address,
         admin.address,
-        privateSale.address
+        communitySale.address
     );
 
     await corePad.addProjectMetaData(
@@ -49,14 +48,14 @@ async function main() {
         ""
     );
 
-    await projectToken.mint(privateSale.address, constants.totalTokenSupply);
+    await projectToken.mint(deployer.address, constants.totalTokenSupply);
 
     console.log("Contracts has been initialized");
     console.log("Contract Address of MockStableCoin", mockStableCoinAdd);
     console.log("Contract Address of MockStakedToken", mockStakedTokenAdd);
     console.log("Contract Address of MockProjectToken", mockProjectTokenAdd);
     console.log("Contract Address of CorePad", corePadAdd);
-    console.log("Contract Address of PrivateSale", privateSaleAdd);
+    console.log("Contract Address of Community Sale", communitySaleAdd);
 }
 
 main().catch((error) => {

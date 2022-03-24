@@ -11,29 +11,27 @@ async function main() {
     const price = constants.tokenPrice;
     const totalAmountToRaise = constants.amountToRaise;
     const totalSupply = constants.totalTokenSupply;
-    const nftAddress = readContractAddress("/MockNft.json");
     const maxTokenPerUser = constants.maxTokenPerUser;
     const startTime = Math.round(Date.now() / 1000);
     const endTime = startTime + 60 * 60 * 1000;
 
-    const PrivateSaleFactory = await ethers.getContractFactory("PrivateSale");
-    const privateSale = await PrivateSaleFactory.deploy(
+    const CommunitySaleFactory = await ethers.getContractFactory("CommunitySale");
+    const communitySale = await CommunitySaleFactory.deploy(
         mockProjectToken,
         mockStableCoin,
         price,
         totalAmountToRaise,
         totalSupply,
-        nftAddress,
         maxTokenPerUser,
         startTime,
         endTime,
         ""
     );
-    await privateSale.deployed();
+    await communitySale.deployed();
 
-    console.log("Token address of privateSale:", privateSale.address);
+    console.log("Token address of communitySale:", communitySale.address);
 
-    saveFrontendFiles(privateSale, "PrivateSale");
+    saveFrontendFiles(communitySale, "CommunitySale");
 }
 
 main().catch((error) => {
