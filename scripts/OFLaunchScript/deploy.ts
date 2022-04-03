@@ -31,12 +31,14 @@ async function main() {
 
   console.log("Token address of privateSaleOF:", privateSaleOF.address);
 
-  saveFrontendFiles(privateSaleOF, "CommunitySale");
+  saveFrontendFiles(privateSaleOF, "PrivateSaleOF");
 
   const projectTokenFact = await ethers.getContractFactory("MockProjectToken");
   const projectToken = await projectTokenFact.attach(mockProjectToken);
+
   await projectToken.mint(deployer.address, constants.totalTokenSupply);
 
+  console.log(whitelistSigningKey.address);
   await privateSaleOF.setWhitelistSigningAddress(whitelistSigningKey.address);
 }
 

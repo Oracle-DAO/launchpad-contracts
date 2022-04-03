@@ -34,14 +34,14 @@ contract EIP712Whitelisting {
         _owner = msg.sender;
     }
 
-    function setWhitelistSigningAddress(address newSigningKey) public {
+    function setWhitelistSigningAddress(address newSigningKey) external {
         require(msg.sender == _owner);
+        require(newSigningKey != address(0));
         _whitelistSigningKey = newSigningKey;
     }
 
     modifier requiresWhitelist(bytes calldata signature) {
         require(_whitelistSigningKey != address(0), "whitelist not enabled");
-
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
@@ -61,7 +61,7 @@ contract EIP712Whitelisting {
     }
 }
 
-contract PrivateSaleOF is EIP712Whitelisting {
+contract PrivateSaleOF {
 
     using SafeERC20 for IERC20;
     using FixedPoint for *;
@@ -79,6 +79,7 @@ contract PrivateSaleOF is EIP712Whitelisting {
     uint32 public endTimestamp;
     uint256 public maxTokenPerUser;
     bool public contractStatus;
+    address private _whitelistSigningKey = address(0);
 
     IERC20 private projectToken;
     IERC20 private principalToken;
@@ -97,7 +98,7 @@ contract PrivateSaleOF is EIP712Whitelisting {
         uint256 totalTokenSupply_,
         uint256 maxTokenPerUser_,
         uint32 startTime_,
-        uint32 endTime_) EIP712Whitelisting()
+        uint32 endTime_)
     {
         _owner = msg.sender;
         projectToken = IERC20(tokenAdd_);
@@ -110,7 +111,13 @@ contract PrivateSaleOF is EIP712Whitelisting {
         endTimestamp = endTime_;
     }
 
-    receive() external payable{
+    receive() external payable {
+    }
+
+    function setWhitelistSigningAddress(address newSigningKey) external {
+        require(msg.sender == _owner);
+        require(newSigningKey != address(0));
+        _whitelistSigningKey = newSigningKey;
     }
 
     // ============= Owner/Admin Actions =================
@@ -144,12 +151,17 @@ contract PrivateSaleOF is EIP712Whitelisting {
     // ============= User Actions =================
 
     // don't forget to approve the principal token
-    function participate(uint256 amount_, bytes calldata signature) external requiresWhitelist(signature) {
+    function participate(uint256 amount_, bytes memory signature, bytes32 data)
+            external {
+        address signer = recoverSigner(data, signature);
+        require(signer == _whitelistSigningKey, "Nice try !!");
+
         require(contractStatus, "Sale Contract is Inactive");
         require(amount_ > 0, "invalid amount");
         require(startTimestamp < block.timestamp, "project not live");
         require(endTimestamp > block.timestamp, "project has ended");
         require(totalAmountRaised.add(amount_) <= totalAmountToRaise, "Amount exceeds total amount to raise");
+
         uint256 value = payoutFor(amount_);
         require(userToTokenAmount[msg.sender].add(value) <= maxTokenPerUser, "Token amount exceed");
         if(userToTokenAmount[msg.sender]  == 0){
@@ -211,4 +223,39 @@ contract PrivateSaleOF is EIP712Whitelisting {
         startTimestamp_ = startTimestamp;
         endTimestamp_ = endTimestamp;
     }
+    function recoverSigner(bytes32 message, bytes memory sig) internal pure
+    returns (address)
+    {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+
+        (v, r, s) = splitSignature(sig);
+
+        return ecrecover(message, v, r, s);
+    }
+
+    function splitSignature(bytes memory sig)
+    internal
+    pure
+    returns (uint8, bytes32, bytes32)
+    {
+        require(sig.length == 65);
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+        // first 32 bytes, after the length prefix
+            r := mload(add(sig, 32))
+        // second 32 bytes
+            s := mload(add(sig, 64))
+        // final byte (first byte of the next 32 bytes)
+            v := byte(0, mload(add(sig, 96)))
+        }
+
+        return (v, r, s);
+    }
+
 }
