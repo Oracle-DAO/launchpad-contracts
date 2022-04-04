@@ -5,7 +5,7 @@ import signWhitelist from "../scripts/utils/signWhitelist";
 import { constants } from "../scripts/constants";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-describe("Public Sale Contract", async () => {
+describe("Community Sale Contract", async () => {
   let projectToken: Contract,
     stableCoin: Contract,
     deployer: SignerWithAddress,

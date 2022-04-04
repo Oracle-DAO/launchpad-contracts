@@ -52,7 +52,7 @@ describe("Core Pad", async () => {
       constants.maxTokenPerUser,
       startTime,
       endTime,
-        ""
+      ""
     );
     project2 = await project2Fact.deploy(
       projectToken.address,
@@ -64,10 +64,8 @@ describe("Core Pad", async () => {
       constants.maxTokenPerUser,
       startTime,
       endTime,
-        ""
+      ""
     );
-
-    console.log(project1.address);
   });
 
   it("Check Staked Address", async function () {
@@ -128,7 +126,7 @@ describe("Core Pad", async () => {
       constants.tokenPrice,
       constants.maxTokenPerUser,
       constants.totalTokenSupply,
-        ""
+      ""
     );
     //
     const projectInfo = await corePad.projectInfoMapping(1);

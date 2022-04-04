@@ -173,10 +173,6 @@ contract CorePad is Ownable {
         uint256 platformFee = totalRaisedAmount.mul(ratePercent).div(1e5);
         uint256 payoutAmount = totalRaisedAmount.sub(platformFee);
 
-        console.log("totalRaisedAmount is ", totalRaisedAmount);
-        console.log("platFormFee is ", platformFee);
-        console.log("payout amount is ", payoutAmount);
-
         _totalPlatformFee += platformFee;
 
         ProjectInfo memory projectInfo = projectInfoMapping[projectId_];

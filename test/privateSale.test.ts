@@ -40,6 +40,7 @@ describe("Private Sale Contract", async () => {
       constants.amountToRaise,
       constants.totalTokenSupply,
       nft.address,
+      constants.maxTokenPerUser,
       startTime,
       endTime,
       ""
